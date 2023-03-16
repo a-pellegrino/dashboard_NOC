@@ -38,7 +38,7 @@ def render_svg(svg, raggLC, filtro,filtroC):
         element = tree.find(".//*[@id='{}']".format(element_id))
 
         if element is not None:
-            element.set("style", "fill: #004080;fill-opacity:0.5")
+            element.set("style", "fill: #004080;fill-opacity:0.7")
 
     # converte l'ElementTree modificato in una stringa SVG
         svg_string = ET.tostring(tree, encoding='unicode')
