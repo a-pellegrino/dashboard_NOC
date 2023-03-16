@@ -45,7 +45,7 @@ def render_svg(svg, raggLC, filtro,filtroC):
     else:
         svg_string = svg
     b64 = base64.b64encode(svg_string.encode('utf-8')).decode("utf-8")
-    html = r'<img src="data:image/svg+xml;base64,%s" width=500 height=550/>' % b64
+    html = r'<img src="data:image/svg+xml;base64,%s" width=250 height=275/>' % b64
 
 
     
