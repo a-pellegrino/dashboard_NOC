@@ -4,7 +4,10 @@ import streamlit as st  # pip install streamlit
 import base64
 import textwrap
 import xml.etree.ElementTree as ET
-
+from st_aggrid import AgGrid
+import numpy as np
+from PIL import Image
+import io
 
 
 st.set_page_config(page_title="Dashboard Costi", page_icon=":bar_chart:", layout="wide")
@@ -161,8 +164,81 @@ fig_hourly_sales.update_layout(
 left_column, right_column = st.columns(2)
 left_column.plotly_chart(fig_hourly_sales, use_container_width=True)
 right_column.plotly_chart(fig_product_sales, use_container_width=True)
+
+#***************************************************************************************
+st.subheader('Tabella Dati Costi:')
 dfcol= df_selection.loc[:,['tip_cos','Articolo', 'raggA', 'raggLB', 'raggLC', 'Breve', 'Spec', 'Total']]
 st.dataframe(dfcol)
+#***************************************************************************************
+
+
+#***************************************************************************************
+Tasks=pd.read_csv('CRONO.csv')
+Tasks['INIZIO'] = pd.to_datetime(Tasks['INIZIO'], format='%d/%m/%Y')#Tasks['INIZIO'].dt.strftime('%d%m%y%H%M%S')#.astype('datetime64')
+Tasks['FINE'] = pd.to_datetime(Tasks['FINE'], format='%d/%m/%Y')#Tasks['FINE'].dt.strftime('%d%m%y%H%M%S')#.astype('datetime64')
+
+#grid_response = AgGrid(
+#    Tasks,
+#    editable=True, 
+#    height=300, 
+#    width='100%',
+#    )
+
+#updated = grid_response['data']
+df = pd.DataFrame(Tasks) 
+#df = pd.DataFrame(updated) 
+#Sezione interfaccia principale - 3
+st.subheader('Visualizza il diagramma di Gantt per:')#<b>Prezzi per Livello</b>
+
+Options = st.selectbox( "",['IMPORTO','DURATA'],index=0)#"Visualizza il diagramma di Gantt per:",
+#if st.button('Generate Gantt Chart'): 
+fig = px.timeline(
+                df, 
+                x_start="INIZIO", 
+                x_end="FINE", 
+                y="ATTIVITÀ",
+                color=Options,
+                hover_name="DESCRIZIONE ATTIVITÀ"
+                )
+
+fig.update_yaxes(autorange="reversed")          #se non specificato come 'reversed', le attività verranno elencate dal basso verso l'alto        
+
+fig.update_layout(
+                title='Diagramma di Gantt del piano di progetto',
+                hoverlabel_bgcolor='#DAEEED',   #Cambia il colore di sfondo del tooltip di hover in un colore azzurro universale. Se non specificato, il colore di sfondo varierà in base al team o alla percentuale di completamento, a seconda della visualizzazione scelta dall'utente
+                bargap=0.2,
+                height=600,              
+                xaxis_title="", 
+                yaxis_title="",                   
+                title_x=0.5,                    #Rendi il titolo centrato                     
+                xaxis=dict(
+                        tickfont_size=15,
+                        tickangle = 270,
+                        rangeslider_visible=True,
+                        side ="top",            #Posiziona le etichette dell'asse delle x in alto al grafico
+                        showgrid = True,
+                        zeroline = True,
+                        showline = True,
+                        showticklabels = True,
+                        tickformat="%x\n",      #Mostra le etichette degli assi in un formato specifico. 
+                        )
+            )
+
+fig.update_xaxes(tickangle=0, tickfont=dict(family='Rockwell', color='blue', size=15))
+
+st.plotly_chart(fig, use_container_width=True)  #Mostra il grafico di Plotly in Streamlit
+st.subheader('Tabella Dati Tempi:')
+grid_response = AgGrid(
+    Tasks,
+    editable=True, 
+    height=300, 
+    width='100%',
+    )
+#***************************************************************************************
+
+
+
+
 # ---- HIDE STREAMLIT STYLE ----
 hide_st_style = """
             <style>
