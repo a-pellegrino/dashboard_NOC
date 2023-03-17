@@ -121,7 +121,7 @@ df_selection = df.query(
 
 # ---- MAINPAGE ----
 
-col1, col2 = st.columns([1, 20])
+col1, col2 = st.columns([1, 10])
 
 with col1:
     st.image(logo, width=60)
