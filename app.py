@@ -1,5 +1,5 @@
 import pandas as pd  # pip install pandas openpyxl
-import plotly.express as px  # pip install plotly-express
+import plotly.express as px  # pip install plotly-express":bar_chart:"
 import streamlit as st  # pip install streamlit
 import base64
 import textwrap
@@ -9,12 +9,24 @@ import numpy as np
 from PIL import Image
 import io
 
+logo = Image.open(r'logo.jpg')
+st.set_page_config(page_title="Dashboard Costi", page_icon=logo, layout="wide")
 
-st.set_page_config(page_title="Dashboard Costi", page_icon=":bar_chart:", layout="wide")
+st.sidebar.image(logo,  width=40)
+
 
 # ---- LEGGI EXCEL ----
 #@st.cache
-
+st.markdown(
+    """
+<style>
+span[data-baseweb="tag"] {
+  background-color: "#939393" !important;
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
 
 
 @st.cache(allow_output_mutation=True)
@@ -108,7 +120,16 @@ df_selection = df.query(
 )
 
 # ---- MAINPAGE ----
-st.title(":bar_chart: Dashboard Costi")
+
+col1, col2 = st.columns([1, 20])
+
+with col1:
+    st.image(logo, width=60)
+
+with col2:
+    st.title("Dashboard Costi")
+
+
 st.markdown("##")
 
 # TOP 
@@ -180,7 +201,6 @@ dfcol= df_selection.loc[:,['tip_cos','Articolo', 'raggA', 'raggLB', 'raggLC', 'B
 st.dataframe(dfcol)
 #***************************************************************************************
 
-
 #***************************************************************************************
 #def get_data_from_excel_temp():
     #df = pd.read_excel(
@@ -193,7 +213,7 @@ st.dataframe(dfcol)
     #)
     #return df
 #@st.cache(allow_output_mutation=True)    
-Tasks=get_data_from_excel()#pd.read_csv('CRONO.csv')
+Tasks=df_selection#get_data_from_excel()#pd.read_csv('CRONO.csv')
 
 #Tasks.iloc[:, 20:]
 Tasks.sort_values(by=['INDICE'], inplace=True)
@@ -208,20 +228,20 @@ Tasks['FINE'] = pd.to_datetime(Tasks['FINE'], format='%d/%m/%Y')#Tasks['FINE'].d
 #    )
 
 #updated = grid_response['data']
-dft = df_selection#pd.DataFrame(Tasks)
+dft = Tasks
 
 #df = pd.DataFrame(updated) 
 #Sezione interfaccia principale - 3
 st.subheader('Visualizza il diagramma di Gantt per:')#<b>Prezzi per Livello</b>
 
-Options = st.selectbox( "",['IMPORTO','DURATA'],index=0)#"Visualizza il diagramma di Gantt per:",
-#if st.button('Generate Gantt Chart'): 
+Option = st.selectbox( "",['IMPORTO','DURATA'],index=0)#"Visualizza il diagramma di Gantt per:",
+#if st.button('Genera diagramma di Gantt'): 
 fig = px.timeline(
                 dft, 
                 x_start="INIZIO", 
                 x_end="FINE", 
                 y="DESCRIZIONE ATTIVITÀ",
-                color=Options,
+                color=Option,
                 hover_name="DESCRIZIONE ATTIVITÀ"
                 )
 
