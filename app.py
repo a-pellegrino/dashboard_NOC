@@ -13,15 +13,19 @@ import io
 st.set_page_config(page_title="Dashboard Costi", page_icon=":bar_chart:", layout="wide")
 
 # ---- LEGGI EXCEL ----
-@st.cache
+#@st.cache
+
+
+
+@st.cache(allow_output_mutation=True)
 def get_data_from_excel():
     df = pd.read_excel(
         io="resu.xlsx",
         engine="openpyxl",
         sheet_name="Foglio1",
         
-        usecols="C:V",
-        nrows=2806,
+        usecols="C:AC",
+        nrows=2258,
     )
 
     return df
@@ -108,15 +112,20 @@ st.title(":bar_chart: Dashboard Costi")
 st.markdown("##")
 
 # TOP 
-total_sales = int(df_selection["Total"].sum())
-filtro= ''.join(df_selection["raggC"].unique())
-filtroC= ''.join(df_selection["raggLC"].unique())
-average_sale_by_transaction = round(df_selection["Total"].mean(), 2)
+costo_totale = int(df_selection["Total"].sum())
+filtro = df_selection["raggC"].dropna().unique()
+filtro = ''.join(filtro)
+#filtro= ''.join((df_selection["raggC"].unique()))
+
+filtroC = df_selection["raggLC"].dropna().unique()
+filtroC = ''.join(filtroC)
+#filtroC= ''.join((df_selection["raggLC"].unique()))
+#average_sale_by_transaction = round(df_selection["Total"].mean(), 2)
 
 left_column, middle_column, right_column = st.columns(3)
 with left_column:
     st.subheader("Costo Totale:")
-    st.subheader(f"EUR € {total_sales:,}")
+    st.subheader(f"EUR € {costo_totale:,}")
     #st.subheader(filtro)
 with middle_column:
     st.subheader("Livello selezionato:")
@@ -127,34 +136,34 @@ with middle_column:
 st.markdown("""---""")
 
 # ARTICOLI [BAR CHART]
-sales_by_product_line = (
+prezzi_per_articolo = (
     df_selection.groupby(by=["Articolo"]).sum()[["Total"]].rename(columns={"Total": "Totale"}).sort_values(by="Totale")
 )
-fig_product_sales = px.bar(
-    sales_by_product_line,
+fig_prezzi_per_articolo = px.bar(
+    prezzi_per_articolo,
     x="Totale",
-    y=sales_by_product_line.index,
+    y=prezzi_per_articolo.index,
     orientation="h",
     title="<b>Prezzi per Articolo</b>",
-    color_discrete_sequence=["#0083B8"] * len(sales_by_product_line),
+    color_discrete_sequence=["#0083B8"] * len(prezzi_per_articolo),
     template="plotly_white",
 )
-fig_product_sales.update_layout(
+fig_prezzi_per_articolo.update_layout(
     plot_bgcolor="rgba(0,0,0,0)",
     xaxis=(dict(showgrid=False))
 )
 
 # LIVELLO [BAR CHART]
-sales_by_hour = df_selection.groupby(by=["raggB"]).sum()[["Total"]].rename(columns={"Total": "Totale"}).rename_axis("Livello")
-fig_hourly_sales = px.bar(
-    sales_by_hour,
-    x=sales_by_hour.index,
+prezzi_per_livello = df_selection.groupby(by=["raggLB"]).sum()[["Total"]].rename(columns={"Total": "Totale"}).rename_axis("Livello")
+fig_prezzi_per_livello = px.bar(
+    prezzi_per_livello,
+    x=prezzi_per_livello.index,
     y="Totale",
     title="<b>Prezzi per Livello</b>",
-    color_discrete_sequence=["#0083B8"] * len(sales_by_hour),
+    color_discrete_sequence=["#0083B8"] * len(prezzi_per_livello),
     template="plotly_white",
 )
-fig_hourly_sales.update_layout(
+fig_prezzi_per_livello.update_layout(
     xaxis=dict(tickmode="linear"),
     plot_bgcolor="rgba(0,0,0,0)",
     yaxis=(dict(showgrid=False)),
@@ -162,20 +171,34 @@ fig_hourly_sales.update_layout(
 
 
 left_column, right_column = st.columns(2)
-left_column.plotly_chart(fig_hourly_sales, use_container_width=True)
-right_column.plotly_chart(fig_product_sales, use_container_width=True)
+left_column.plotly_chart(fig_prezzi_per_livello, use_container_width=True)
+right_column.plotly_chart(fig_prezzi_per_articolo, use_container_width=True)
 
 #***************************************************************************************
 st.subheader('Tabella Dati Costi:')
-dfcol= df_selection.loc[:,['tip_cos','Articolo', 'raggA', 'raggLB', 'raggLC', 'Breve', 'Spec', 'Total']]
+dfcol= df_selection.loc[:,['tip_cos','Articolo', 'raggA', 'raggLB', 'raggLC', 'Breve', 'Spec', 'Total']].sort_values(by=['tip_cos'])
 st.dataframe(dfcol)
 #***************************************************************************************
 
 
 #***************************************************************************************
-Tasks=pd.read_csv('CRONO.csv')
+#def get_data_from_excel_temp():
+    #df = pd.read_excel(
+     #   io="resu.xlsx",
+     #   engine="openpyxl",
+     #   sheet_name="Foglio1",
+        
+     #   usecols="C:AC",
+      #  nrows=2258,
+    #)
+    #return df
+#@st.cache(allow_output_mutation=True)    
+Tasks=get_data_from_excel()#pd.read_csv('CRONO.csv')
+
+#Tasks.iloc[:, 20:]
+Tasks.sort_values(by=['INDICE'], inplace=True)
 Tasks['INIZIO'] = pd.to_datetime(Tasks['INIZIO'], format='%d/%m/%Y')#Tasks['INIZIO'].dt.strftime('%d%m%y%H%M%S')#.astype('datetime64')
-Tasks['FINE'] = pd.to_datetime(Tasks['FINE'], format='%d/%m/%Y')#Tasks['FINE'].dt.strftime('%d%m%y%H%M%S')#.astype('datetime64')
+Tasks['FINE'] = pd.to_datetime(Tasks['FINE'], format='%d/%m/%Y')#Tasks['FINE'].dt.strftime('%d%m%y%H%M%S')#.astype('datetime64')%Y-%m-%dT%H:%M:%S
 
 #grid_response = AgGrid(
 #    Tasks,
@@ -185,7 +208,8 @@ Tasks['FINE'] = pd.to_datetime(Tasks['FINE'], format='%d/%m/%Y')#Tasks['FINE'].d
 #    )
 
 #updated = grid_response['data']
-df = pd.DataFrame(Tasks) 
+dft = df_selection#pd.DataFrame(Tasks)
+
 #df = pd.DataFrame(updated) 
 #Sezione interfaccia principale - 3
 st.subheader('Visualizza il diagramma di Gantt per:')#<b>Prezzi per Livello</b>
@@ -193,10 +217,10 @@ st.subheader('Visualizza il diagramma di Gantt per:')#<b>Prezzi per Livello</b>
 Options = st.selectbox( "",['IMPORTO','DURATA'],index=0)#"Visualizza il diagramma di Gantt per:",
 #if st.button('Generate Gantt Chart'): 
 fig = px.timeline(
-                df, 
+                dft, 
                 x_start="INIZIO", 
                 x_end="FINE", 
-                y="ATTIVITÀ",
+                y="DESCRIZIONE ATTIVITÀ",
                 color=Options,
                 hover_name="DESCRIZIONE ATTIVITÀ"
                 )
@@ -228,12 +252,17 @@ fig.update_xaxes(tickangle=0, tickfont=dict(family='Rockwell', color='blue', siz
 
 st.plotly_chart(fig, use_container_width=True)  #Mostra il grafico di Plotly in Streamlit
 st.subheader('Tabella Dati Tempi:')
-grid_response = AgGrid(
-    Tasks,
-    editable=True, 
-    height=300, 
-    width='100%',
-    )
+dfcolt = df_selection.groupby(by=['INDICE','ATTIVITÀ','DESCRIZIONE ATTIVITÀ', 'INIZIO', 'FINE', 'DURATA' ]).sum()[["IMPORTO"]].sort_values(by=['INDICE']).reset_index()
+dfcolt = dfcolt.set_index("INDICE")
+st.dataframe(dfcolt)
+
+#grid_response = AgGrid(
+ #   Tasks,
+ #   editable=True, 
+ #   height=300, 
+  #  width='100%',
+  #  )
+  #.loc[:,['index','ATTIVITÀ','DESCRIZIONE ATTIVITÀ', 'INIZIO', 'FINE', 'DURATA', 'IMPORTO' ]]
 #***************************************************************************************
 
 
