@@ -76,12 +76,12 @@ agreeRLC = st.sidebar.checkbox('Attiva menù a discesa per Livelli')
 if agreeRLC:
     raggLC = st.sidebar.selectbox(
         'Seleziona il livello da filtrare?',
-        df["raggLC"].dropna().unique())
+        df["raggLC"].unique())
 else:
     raggLC = st.sidebar.multiselect(
         "Selezione multipla Livelli:",
-        options=df["raggLC"].dropna().unique(),
-        default=df["raggLC"].dropna().unique()
+        options=df["raggLC"].unique(),
+        default=df["raggLC"].unique()
 )
 
 raggLB = st.sidebar.multiselect(
